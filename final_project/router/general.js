@@ -7,37 +7,116 @@ const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const username = req.body.username;
+  const password = req.body.password;
+
+  // Kiểm tra xem đã truyền đủ username và password chưa
+  if (!username || !password) {
+    return res.status(404).json({ message: "Unable to register user. Username and/or password not provided." });
+  }
+
+  // Kiểm tra xem username đã tồn tại chưa
+  if (isValid(username)) {
+    users.push({ "username": username, "password": password });
+    return res.status(200).json({ message: "User successfully registered. Now you can login" });
+  } else {
+    return res.status(404).json({ message: "User already exists!" });
+  }
 });
 
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  try {
+    // Giả lập xử lý bất đồng bộ qua Promise
+    const getBooks = () => {
+      return new Promise((resolve) => {
+        resolve(books);
+      });
+    };
+
+    const bookList = await getBooks();
+    return res.status(200).send(JSON.stringify(bookList, null, 4));
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching book list" });
+  }
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+const isbn = req.params.isbn;
+
+  try {
+    const getBookByISBN = (isbnNum) => {
+      return new Promise((resolve, reject) => {
+        if (books[isbnNum]) {
+          resolve(books[isbnNum]);
+        } else {
+          reject("Book not found");
+        }
+      });
+    };
+
+    const book = await getBookByISBN(isbn);
+    return res.status(200).json(book);
+  } catch (error) {
+    return res.status(404).json({ message: error });
+  }
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const author = req.params.author;
+  const bookKeys = Object.keys(books);
+  const matchingBooks = [];
+
+  // Lặp qua tất cả các sách để tìm tác giả khớp
+  bookKeys.forEach((key) => {
+    if (books[key].author.toLowerCase() === author.toLowerCase()) {
+      matchingBooks.push(books[key]);
+    }
+  });
+
+  if (matchingBooks.length > 0) {
+    return res.status(200).json(matchingBooks);
+  } else {
+    return res.status(404).json({ message: "No books found by this author" });
+  }
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const title = req.params.title;
+  const bookKeys = Object.keys(books);
+  const matchingBooks = [];
+
+  // Lặp qua tất cả các sách để tìm tiêu đề khớp
+  bookKeys.forEach((key) => {
+    if (books[key].title.toLowerCase() === title.toLowerCase()) {
+      matchingBooks.push(books[key]);
+    }
+  });
+
+  if (matchingBooks.length > 0) {
+    return res.status(200).json(matchingBooks);
+  } else {
+    return res.status(404).json({ message: "No books found with this title" });
+  }
 });
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const isbn = req.params.isbn;
+
+  if (books[isbn]) {
+    return res.status(200).json(books[isbn].reviews);
+  } else {
+    return res.status(404).json({ message: "Book not found" });
+  }
 });
 
 module.exports.general = public_users;
